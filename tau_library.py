@@ -50,6 +50,21 @@
 ## z0, Q0 -------------------> initial conditions
 ## n ------------------------> spline to interpolate N_dot
 ## RETURN 1 array: tau_ar
+
+
+
+## routines that work only with my LF format
+## 
+## a) Loading the luminosity function
+## LF(z,csm)
+## z ------------------------> redshift
+## csm ----------------------> cosmological model (index)
+## cosmology ----------------> array with file names
+## dir ----------------------> path of file directory
+## RETURN 2 arrays: Muv and Phi(Muv)
+
+
+
 #########################################################
 
 import numpy as np
@@ -327,3 +342,33 @@ def tau_ar(z_ar,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n
 		tau_ar[i] = tau(z_ar[i],*args)
 
 	return tau_ar
+
+
+
+
+
+
+
+
+#########################################################
+###########   Loading the luminosity function   #########
+#########################################################
+## a) Loading the luminosity function
+## LF(z,csm)
+## z ------------------------> redshift
+## csm ----------------------> cosmological model (index)
+## cosmology ----------------> array with file names
+## dir ----------------------> path of file directory
+
+def LF(z,csm,cosmology,dir):
+	file = cosmology[csm]+str(z)+'.dat'
+	Muv,Phi = np.loadtxt(dir+file,unpack=True)
+	
+	# verbose
+	print('\nLoading luminosity function:')
+	print('-- ',file[:-4],' --')
+	#print '\n   how much sampled: ', len(Phi), len(Phi)
+	print('   UV magnitude interval:')
+	print('  ',np.min(Muv),'    ',np.max(Muv),'\n')
+	 
+	return [Muv,Phi]
