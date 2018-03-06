@@ -395,7 +395,7 @@ def LF(z,csm,cosmology,dir):
 ## N_ion_z(z,csm,f_esc,Muv_max_flag,Muv_max,cosmology,dir)
 ## z ------------------------> redshift
 ## csm ----------------------> cosmological model (index)
-## f_esc --------------------> escape function
+## f_esc --------------------> escape function 
 ## Muv_max_flag -------------> if false, I take all Muv in file
 ## Muv_max ------------------> faint end cut magnitude
 ## cosmology ----------------> array with file names
