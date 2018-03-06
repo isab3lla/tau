@@ -115,23 +115,23 @@ def g_ion(Muv):
 # photons per unit time per unit volume:
 def N_ion(Muv,Phi,f_esc,Muv_max_flag,Muv_max):	# (eq. 2)
 
-	print 'Computing N_ion . .'
-	print 'Escape fraction = %.2f'%(f_esc)
+	print('Computing N_ion . .')
+	print('Escape fraction = %.2f'%(f_esc))
 	
 	## sanity check
 	if len(Muv)!=len(Phi):
-		print '\nLUMINOSITY FUNCTION AND MAGNITUDES'
-		print 'HAVE NOT SAME DIMENSION!!\n'
+		print('\nLUMINOSITY FUNCTION AND MAGNITUDES')
+		print('HAVE NOT SAME DIMENSION!!\n')
 		sys.exit()
 	
 	if Muv_max_flag:
-		print 'we consider magnitudes Muv <', Muv_max
+		print('we consider magnitudes Muv <', Muv_max)
 		index=np.where(Muv<Muv_max)[0]
 		Muv=Muv[index]; Phi=Phi[index]
 		del index
 	else:
-		print 'Max magnitude --> Muv = ',np.max(Muv)	
-	print ' '
+		print('Max magnitude --> Muv = ',np.max(Muv))	
+	print(' ')
 	
 	integrand = Phi*g_ion(Muv)
 	#integration with Simpson rule
@@ -220,13 +220,13 @@ def Q_sol(z_sample,Nion_sample,h,Omega_M,Omega_b,z1=4.5,z0=20.5,Q0=1e-13,n=1,ver
 	
 	## sanity check
 	if len(z_sample)!=len(Nion_sample):
-		print '\nREDSHIFTS AND N_DOT'
-		print 'HAVE NOT SAME DIMENSION!!\n'
+		print('\nREDSHIFTS AND N_DOT')
+		print('HAVE NOT SAME DIMENSION!!\n')
 		sys.exit()
 	if verb:
-		print '\n\nSolving for Q . .'	
-		print '  %d N_dot points available'%(len(z_sample))
-		print '  at redshifts --> ',z_sample
+		print('\n\nSolving for Q . .')	
+		print('  %d N_dot points available'%(len(z_sample)))
+		print('  at redshifts --> ',z_sample)
 	
 	while eps > z1:
 	#print eps
@@ -242,7 +242,7 @@ def Q_sol(z_sample,Nion_sample,h,Omega_M,Omega_b,z1=4.5,z0=20.5,Q0=1e-13,n=1,ver
 	end_a = time.time()
 	ts = end_a - start_a
 	if verb:
-		print 'elapsed time for solving: %.3f s\n'%(ts)
+		print('elapsed time for solving: %.3f s\n'%(ts))
 
    	## deleting all Q > 1 data
 	index = np.where(sol_ar>1.)[0]
@@ -276,7 +276,7 @@ def tau(zt,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n=1,ve
 	
 	## sanity check
 	if zt>20.:
-		print '\n redshift cannot be higher than 20!\n'
+		print('\n redshift cannot be higher than 20!\n')
 		sys.exit()
 		
 	args = z_sample,Nion_sample,h,Omega_M,Omega_b,z1,z0,Q0,n,verb
@@ -293,7 +293,7 @@ def tau(zt,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n=1,ve
 
 	integrand = int1*int2
 	if verb:
-		print 'Solving for tau at z =', zt
+		print('Solving for tau at z =', zt)
 	#integration with Simpson rule
 	Isimps = simps(integrand, z_tau)
 	
@@ -318,9 +318,9 @@ def tau_ar(z_ar,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n
 	verb = False
 	args = z_sample,Nion_sample,h,Omega_M,Omega_b,z1,z0,Q0,n,verb
 	
-	print '\nSolving for tau . . '
-	print '  %d N_dot points available'%(len(z_sample))
-	print '  at redshifts --> ',z_sample,'\n'
+	print('\nSolving for tau . . ')
+	print('  %d N_dot points available'%(len(z_sample)))
+	print('  at redshifts --> ',z_sample,'\n')
 	
 	tau_ar = np.zeros(len(z_ar))
 	for i in range(len(z_ar)):
