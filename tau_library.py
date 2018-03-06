@@ -53,15 +53,29 @@
 
 
 
+
+
 ## routines that work only with my LF format
-## 
+
 ## a) Loading the luminosity function
-## LF(z,csm)
+## LF(z,csm,cosmology,dir)
 ## z ------------------------> redshift
 ## csm ----------------------> cosmological model (index)
 ## cosmology ----------------> array with file names
 ## dir ----------------------> path of file directory
 ## RETURN 2 arrays: Muv and Phi(Muv)
+
+## b) Computing the ionisation rate
+## N_ion_z(z,csm,f_esc,Muv_max,cosmology,dir)
+## z ------------------------> redshift array
+## csm ----------------------> cosmological model (index)
+## cosmology ----------------> array with file names
+## dir ----------------------> path of file directory
+## RETURN 1 array: N_ion_z, same length as the input z
+## i.e.
+## ionisation rate in number of photons yr^-1 Mpc^-3
+## a value for each input redshift
+
 
 
 
@@ -347,14 +361,13 @@ def tau_ar(z_ar,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n
 
 
 
-
-
-
 #########################################################
-###########   Loading the luminosity function   #########
+#########   FUNCTIONS SPECIFIC FOR MY LF FORMAT   #######
 #########################################################
+
+
 ## a) Loading the luminosity function
-## LF(z,csm)
+## LF(z,csm,cosmology,dir)
 ## z ------------------------> redshift
 ## csm ----------------------> cosmological model (index)
 ## cosmology ----------------> array with file names
@@ -372,3 +385,24 @@ def LF(z,csm,cosmology,dir):
 	print('  ',np.min(Muv),'    ',np.max(Muv),'\n')
 	 
 	return [Muv,Phi]
+
+
+
+## b) Computing the ionisation rate
+## N_ion_z(z,csm,f_esc,Muv_max,cosmology,dir)
+## z ------------------------> redshift
+## csm ----------------------> cosmological model (index)
+## cosmology ----------------> array with file names
+## dir ----------------------> path of file directory
+
+def N_ion_z(z,csm,f_esc,Muv_max,cosmology,dir):
+	N_ion_z = np.zeros(len(z))
+	for i in range(len(z)):
+		Muv, Phi = LF(z[i],csm,cosmology,dir)
+		N_ion_z[i]= TL.N_ion(Muv,Phi,f_esc,Muv_max_flag,Muv_max)
+		del Muv, Phi
+	return N_ion_z
+
+
+
+
