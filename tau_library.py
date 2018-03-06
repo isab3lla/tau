@@ -66,9 +66,12 @@
 ## RETURN 2 arrays: Muv and Phi(Muv)
 
 ## b) Computing the ionisation rate
-## N_ion_z(z,csm,f_esc,Muv_max,cosmology,dir)
-## z ------------------------> redshift array
+## N_ion_z(z,csm,f_esc,Muv_max_flag,Muv_max,cosmology,dir)
+## z ------------------------> redshift
 ## csm ----------------------> cosmological model (index)
+## f_esc --------------------> escape function
+## Muv_max_flag -------------> if false, I take all Muv in file
+## Muv_max ------------------> faint end cut magnitude
 ## cosmology ----------------> array with file names
 ## dir ----------------------> path of file directory
 ## RETURN 1 array: N_ion_z, same length as the input z
@@ -389,17 +392,21 @@ def LF(z,csm,cosmology,dir):
 
 
 ## b) Computing the ionisation rate
-## N_ion_z(z,csm,f_esc,Muv_max,cosmology,dir)
+## N_ion_z(z,csm,f_esc,Muv_max_flag,Muv_max,cosmology,dir)
 ## z ------------------------> redshift
 ## csm ----------------------> cosmological model (index)
+## f_esc --------------------> escape function
+## Muv_max_flag -------------> if false, I take all Muv in file
+## Muv_max ------------------> faint end cut magnitude
 ## cosmology ----------------> array with file names
 ## dir ----------------------> path of file directory
 
-def N_ion_z(z,csm,f_esc,Muv_max,cosmology,dir):
+
+def N_ion_z(z,csm,f_esc,Muv_max_flag,Muv_max,cosmology,dir):
 	N_ion_z = np.zeros(len(z))
 	for i in range(len(z)):
 		Muv, Phi = LF(z[i],csm,cosmology,dir)
-		N_ion_z[i]= TL.N_ion(Muv,Phi,f_esc,Muv_max_flag,Muv_max)
+		N_ion_z[i]= N_ion(Muv,Phi,f_esc,Muv_max_flag,Muv_max)
 		del Muv, Phi
 	return N_ion_z
 
