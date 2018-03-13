@@ -52,6 +52,17 @@
 ## RETURN 1 array: tau_ar
 
 
+## 6) redshift of reionization and its duration
+## We follow eq. 3 of Sharma+ 2017, (1712.06619)
+## reion_time(zlist,Qlist,increment=1.e-6)
+## zlist --------------------> z-array, same length as Q
+## Qlist --------------------> Q neutral fraction array
+## increment ----------------> for computing the derivative
+## RETURN 2 scalars:
+## 1. z_re, redshift of reionization
+## 2. deltaz_re, duration of reionization
+
+
 
 
 
@@ -360,6 +371,26 @@ def tau_ar(z_ar,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n
 
 	return tau_ar
 
+
+
+
+
+#########################################################
+###############   reionisation timescales   #############
+#########################################################
+## 6) redshift of reionization and its duration
+## We follow eq. 3 of Sharma+ 2017, (1712.06619)
+## reion_time(zlist,Qlist,increment=1.e-6)
+## zlist --------------------> z-array, same length as Q
+## Qlist --------------------> Q neutral fraction array
+## increment ----------------> for computing the derivative
+
+def reion_time(zlist,Qlist,increment=1.e-6):
+	z_ar_tmp = np.interp(np.array([0.5-increment,0.5,0.5+increment]),Qlist,zlist)
+	Qprime = (2*increment)/(z_ar_tmp[-1]-z_ar_tmp[0])
+	deltaz_re = -1./Qprime
+
+	return z_ar_tmp[1],deltaz_re
 
 
 
