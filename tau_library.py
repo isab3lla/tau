@@ -53,14 +53,18 @@
 
 
 ## 6) redshift of reionization and its duration
-## We follow eq. 3 of Sharma+ 2017, (1712.06619)
+## z_re corresponds to z when Q = 0.5
+## First delta_re definition is  eq. 3 of Sharma+ 2017, (1712.06619) 
+## but also Monsalve+ 2017
+## Second definition from George+ 2015 (kSZ effect on CMB)
 ## reion_time(zlist,Qlist,increment=1.e-6)
 ## zlist --------------------> z-array, same length as Q
 ## Qlist --------------------> Q neutral fraction array
 ## increment ----------------> for computing the derivative
-## RETURN 2 scalars:
+## RETURN 3 scalars:
 ## 1. z_re, redshift of reionization
-## 2. deltaz_re, duration of reionization
+## 2. deltaz_re_1, duration of reionization 
+## 3. deltaz_re_2, duration of reionization (George+ 2015)
 
 
 
@@ -373,24 +377,29 @@ def tau_ar(z_ar,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n
 
 
 
-
-
 #########################################################
 ###############   reionisation timescales   #############
 #########################################################
-## 6) redshift of reionization and its duration
-## We follow eq. 3 of Sharma+ 2017, (1712.06619)
+## z_re corresponds to z when Q = 0.5
+## First delta_re definition is  eq. 3 of Sharma+ 2017, (1712.06619) 
+## but also Monsalve+ 2017
+## Second definition from George+ 2015 (kSZ effect on CMB)
 ## reion_time(zlist,Qlist,increment=1.e-6)
 ## zlist --------------------> z-array, same length as Q
 ## Qlist --------------------> Q neutral fraction array
 ## increment ----------------> for computing the derivative
 
 def reion_time(zlist,Qlist,increment=1.e-6):
-	z_ar_tmp = np.interp(np.array([0.5-increment,0.5,0.5+increment]),Qlist,zlist)
-	Qprime = (2*increment)/(z_ar_tmp[-1]-z_ar_tmp[0])
-	deltaz_re = -1./Qprime
+	Q_for_interp = np.array([0.2,0.5-increment,0.5,0.5+increment,0.99])
 
-	return z_ar_tmp[1],deltaz_re
+	z_ar_tmp = np.interp(Q_for_interp,Qlist,zlist)
+
+	Qprime = (2*increment)/(z_ar_tmp[3]-z_ar_tmp[1])
+	deltaz_re1 = -1./Qprime # eq. 3 of Sharma+ 2017
+
+	deltaz_re2 = z_ar_tmp[0] - z_ar_tmp[4]
+
+	return z_ar_tmp[1],deltaz_re1,deltaz_re2
 
 
 
