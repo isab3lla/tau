@@ -54,7 +54,7 @@
 
 ## 6) redshift of reionization and its duration
 ## z_re corresponds to z when Q = 0.5
-## First delta_re definition is  eq. 3 of Sharma+ 2017, (1712.06619) 
+## First delta_re definition is  eq. 3 of Sharma+2018, (1712.06619) 
 ## but also Monsalve+ 2017
 ## Second definition from George+ 2015 (kSZ effect on CMB)
 ## reion_time(zlist,Qlist,increment=1.e-6)
@@ -66,6 +66,11 @@
 ## 2. deltaz_re_1, duration of reionization 
 ## 3. deltaz_re_2, duration of reionization (George+ 2015)
 
+## 7) redshift dependent f_esc
+## ## a) Sharma+2018
+## ## z -----------------------> redshift
+## ## f_esc7 ------------------> f_esc at z=7
+## ## RETURN 1 scalar: f_esc
 
 
 
@@ -84,7 +89,22 @@
 ## N_ion_z(z,csm,f_esc,Muv_max_flag,Muv_max,cosmology,dir)
 ## z ------------------------> redshift
 ## csm ----------------------> cosmological model (index)
-## f_esc --------------------> escape function
+## f_esc --------------------> escape fraction
+## Muv_max_flag -------------> if false, I take all Muv in file
+## Muv_max ------------------> faint end cut magnitude
+## cosmology ----------------> array with file names
+## dir ----------------------> path of file directory
+## RETURN 1 array: N_ion_z, same length as the input z
+## i.e.
+## ionisation rate in number of photons yr^-1 Mpc^-3
+## a value for each input redshift
+
+## c) Computing the ionisation rate with z-dependent f_esc
+## N_ion_z_fz(z,csm,recipe,f_esc_prm,Muv_max_flag,Muv_max,cosmology,dir)
+## z ------------------------> redshift
+## csm ----------------------> cosmological model (index)
+## recipe -------------------> which f_esc(z) parametrization
+## f_esc_prm ----------------> escape fraction parameter
 ## Muv_max_flag -------------> if false, I take all Muv in file
 ## Muv_max ------------------> faint end cut magnitude
 ## cosmology ----------------> array with file names
@@ -185,6 +205,7 @@ def N_ion(Muv,Phi,f_esc,Muv_max_flag,Muv_max):	# (eq. 2)
 	Isimps = simps(integrand, Muv)
 	
 	return f_esc * Isimps # yr^-1 Mpc^-3
+
 
 
 #########################################################
@@ -380,8 +401,8 @@ def tau_ar(z_ar,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n
 #########################################################
 ###############   reionisation timescales   #############
 #########################################################
-## z_re corresponds to z when Q = 0.5
-## First delta_re definition is  eq. 3 of Sharma+ 2017, (1712.06619) 
+## 6) z_re corresponds to z when Q = 0.5
+## First delta_re definition is  eq. 3 of Sharma+2018, (1712.06619) 
 ## but also Monsalve+ 2017
 ## Second definition from George+ 2015 (kSZ effect on CMB)
 ## reion_time(zlist,Qlist,increment=1.e-6)
@@ -395,12 +416,24 @@ def reion_time(zlist,Qlist,increment=1.e-6):
 	z_ar_tmp = np.interp(Q_for_interp,Qlist,zlist)
 
 	Qprime = (2*increment)/(z_ar_tmp[3]-z_ar_tmp[1])
-	deltaz_re1 = -1./Qprime # eq. 3 of Sharma+ 2017
+	deltaz_re1 = -1./Qprime # eq. 3 of Sharma+2018
 
 	deltaz_re2 = z_ar_tmp[0] - z_ar_tmp[4]
 
 	return z_ar_tmp[1],deltaz_re1,deltaz_re2
 
+
+
+#########################################################
+##############   redshift dependent f_esc   #############
+#########################################################
+## 7) 
+## ## a) Sharma+2018
+## ## z -----------------------> redshift
+## ## f_esc7 ------------------> f_esc at z=7
+
+def fesc_Sharma(z,f_esc7):
+	return f_esc7*(1.+z)/8.
 
 
 
@@ -435,7 +468,7 @@ def LF(z,csm,cosmology,dir):
 ## N_ion_z(z,csm,f_esc,Muv_max_flag,Muv_max,cosmology,dir)
 ## z ------------------------> redshift
 ## csm ----------------------> cosmological model (index)
-## f_esc --------------------> escape function 
+## f_esc --------------------> escape fraction 
 ## Muv_max_flag -------------> if false, I take all Muv in file
 ## Muv_max ------------------> faint end cut magnitude
 ## cosmology ----------------> array with file names
@@ -447,6 +480,33 @@ def N_ion_z(z,csm,f_esc,Muv_max_flag,Muv_max,cosmology,dir):
 	for i in range(len(z)):
 		Muv, Phi = LF(z[i],csm,cosmology,dir)
 		N_ion_z[i]= N_ion(Muv,Phi,f_esc,Muv_max_flag,Muv_max)
+		del Muv, Phi
+	return N_ion_z
+
+
+## c) Computing the ionisation rate with z-dependent f_esc
+## N_ion_z_fz(z,csm,recipe,f_esc_prm,Muv_max_flag,Muv_max,cosmology,dir)
+## z ------------------------> redshift
+## csm ----------------------> cosmological model (index)
+## recipe -------------------> which f_esc(z) parametrization
+## f_esc_prm ----------------> escape fraction parameter
+## Muv_max_flag -------------> if false, I take all Muv in file
+## Muv_max ------------------> faint end cut magnitude
+## cosmology ----------------> array with file names
+## dir ----------------------> path of file directory
+
+
+def N_ion_z_fz(z,csm,recipe,f_esc_prm,Muv_max_flag,Muv_max,cosmology,dir):
+	N_ion_z = np.zeros(len(z))
+	fescz   = np.zeros(len(z))
+
+	if recipe='sharma':
+		for i in range(len(z)):
+			fescz[i] = fesc_Sharma(z[i],f_esc_prm)
+
+	for i in range(len(z)):
+		Muv, Phi = LF(z[i],csm,cosmology,dir)
+		N_ion_z[i]= N_ion(Muv,Phi,fescz[i],Muv_max_flag,Muv_max)
 		del Muv, Phi
 	return N_ion_z
 
