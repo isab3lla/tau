@@ -500,9 +500,12 @@ def N_ion_z_fz(z,csm,recipe,f_esc_prm,Muv_max_flag,Muv_max,cosmology,dir):
 	N_ion_z = np.zeros(len(z))
 	fescz   = np.zeros(len(z))
 
-	if recipe='sharma':
+	if recipe=='sharma':
 		for i in range(len(z)):
 			fescz[i] = fesc_Sharma(z[i],f_esc_prm)
+	else:
+		print('specify an existing patametrization of the escape fraction!')
+		sys.exit()
 
 	for i in range(len(z)):
 		Muv, Phi = LF(z[i],csm,cosmology,dir)
