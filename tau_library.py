@@ -505,6 +505,7 @@ def N_ion_z_fz(z,csm,recipe,f_esc_prm,Muv_max_flag,Muv_max,cosmology,dir):
 			fescz[i] = fesc_Sharma(z[i],f_esc_prm)
 	else:
 		print('specify an existing patametrization of the escape fraction!')
+		print('available ones: sharma')
 		sys.exit()
 
 	for i in range(len(z)):
