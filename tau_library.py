@@ -68,6 +68,7 @@
 
 ## 7) redshift dependent f_esc
 ## ## a) Sharma+2018
+## ## fesc_Sharma(z,f_esc7)
 ## ## z -----------------------> redshift
 ## ## f_esc7 ------------------> f_esc at z=7
 ## ## RETURN 1 scalar: f_esc
