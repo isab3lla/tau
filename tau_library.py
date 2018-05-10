@@ -72,6 +72,19 @@
 ## ## z -----------------------> redshift
 ## ## f_esc7 ------------------> f_esc at z=7
 ## ## RETURN 1 scalar: f_esc
+##
+## ## b) Faisst 2016
+## ## fesc_Faisst(z)
+## ## z -----------------------> redshift
+## ## RETURN 3 arrays: f_esc, f_esc_up, f_esc_down (1sigma)
+## ## for the actual Faisst-like parametrization of f_esc:
+## ## Faisst_param(z,fesc0,alpha)
+##
+## ## c) isa parametrization
+## ## fesc_isa(z,f_esc6)
+## ## z -----------------------> redshift
+## ## f_esc6 ------------------> f_esc at z=6
+## ## RETURN 1 scalar: f_esc
 
 
 
@@ -429,6 +442,8 @@ def reion_time(zlist,Qlist,increment=1.e-6):
 ##############   redshift dependent f_esc   #############
 #########################################################
 ## 7) 
+
+
 ## ## a) Sharma+2018
 ## ## z -----------------------> redshift
 ## ## f_esc7 ------------------> f_esc at z=7
@@ -437,6 +452,32 @@ def fesc_Sharma(z,f_esc7):
 	return f_esc7*(1.+z)/8.
 
 
+## ## b) Faisst 2016
+## ## fesc_Faisst(z)
+## ## z -----------------------> redshift
+
+## the actual f_esc parametrization 
+def Faisst_param(z,fesc0,alpha):
+	return fesc0*((1.0+z)/3.0)**alpha
+
+def fesc_Faisst(z):
+
+	fesc0 = np.array([0.023,0.028,0.018])
+	alpha = np.array([1.17,1.19,1.15])
+
+	f_esc      = Faisst_param(z,fesc0[0],alpha[0])
+	f_esc_up   = Faisst_param(z,fesc0[1],alpha[1])
+	f_esc_down = Faisst_param(z,fesc0[2],alpha[2])
+
+	return f_esc, f_esc_up, f_esc_down
+
+
+## ## c) isa's parametrization
+## ## z -----------------------> redshift
+## ## f_esc6 ------------------> f_esc at z=6
+
+def fesc_isa(z,f_esc6):
+	return f_esc6*(1.+z)/7.
 
 #########################################################
 #########   FUNCTIONS SPECIFIC FOR MY LF FORMAT   #######
@@ -504,6 +545,9 @@ def N_ion_z_fz(z,csm,recipe,f_esc_prm,Muv_max_flag,Muv_max,cosmology,dir):
 	if recipe=='sharma':
 		for i in range(len(z)):
 			fescz[i] = fesc_Sharma(z[i],f_esc_prm)
+	elif recipe=='isa':
+		for i in range(len(z)):
+			fescz[i] = fesc_isa(z[i],f_esc_prm)
 	else:
 		print('specify an existing patametrization of the escape fraction!')
 		print('available ones: sharma')
