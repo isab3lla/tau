@@ -32,15 +32,16 @@
 ## 4) value of optical depth for CMB  (eq. 4)  
 ## tau(zt,z_sample,Nion_sample,h,Omega_M,Omega_b,
 ##      z1=4.5,z0=20.5,Q0=1e-13,n=1,verb=True)
-## zt -----------------------> chosen z for tau(z)
+## zt -----------------------> chosen z for tau(z) (or array)
 ## z_sample,Nion_sample -----> z and N_dot available
 ## h,Omega_M,Omega_b --------> cosmology used
 ## z1 -----------------------> up to which low z to look for Q
 ## z0, Q0 -------------------> initial conditions
 ## n ------------------------> spline to interpolate N_dot
-## RETURN single value tau(zt)
+## RETURN single value tau(zt) or array, according to zt input
+## zt HAS TO HAVE A SIZE!
 
-## 5) array of optical depth
+## 5) array of optical depth -- NOW DEPRECATED
 ## tau_ar(z_ar,z_sample,Nion_sample,h,Omega_M,Omega_b,
 ##			z1=0.0,z0=20.5,Q0=1e-13,n=1)
 ## z_ar ---------------------> chosen z-array
@@ -175,6 +176,17 @@ def Hz(z,h,Omega_M):
 def dt_dz(z,h,Omega_M): # yr
 	Hz_yr = Hz(z,h,Omega_M)*3.15576e7/(3.086e19) 
 	return -1./(1.+z)/Hz_yr
+
+## array with decrasing spacing between elements
+## useful for tau integrals
+def spaced_list(start,stop,how_close,spacing):
+	a = np.array([start])
+
+	while a[-1] < (stop-how_close):
+		increment = float((stop - a[-1]))/spacing
+		a = np.append(a,(increment+a[-1]))
+
+	return a
 
 
 #########################################################
@@ -352,35 +364,96 @@ def fe(ze): # see eq. 4
 	eta = (np.sign(4-ze)+3)/2
 	return 1.+(eta*0.25)/(4.*0.75)
 
-
-# Thompson optical depth for CMB  (eq. 4)
-def tau(zt,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n=1,verb=True):
-	
-	## sanity check
-	if zt>20.:
-		print('\n redshift cannot be higher than 20!\n')
-		sys.exit()
+def Q_function(z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n=1,verb=True):
 		
 	args = z_sample,Nion_sample,h,Omega_M,Omega_b,z1,z0,Q0,n,verb
-	
+
 	## creating the Q function
 	## (interpolating Q_solved with order 1 spline)
 	z_ar, sol_a = Q_sol(*args)
 	Q_func = interpolate.interp1d(z_ar, sol_a,1)
-	
-	z_tau = np.linspace(z1,zt,(zt+1)*1e3)
-	
+
+	return Q_func
+
+def tau_integrand(z_tau,z_sample,Nion_sample,h,Omega_M,Omega_b,z1,z0,Q0,n,verb):
+
+	args = z_sample,Nion_sample,h,Omega_M,Omega_b,z1,z0,Q0,n,verb
+
+	Q_func = Q_function(*args)
+
 	int1 = c*(1+z_tau)**2 / Hz(z_tau,h,Omega_M) 
 	int2 = Q_func(z_tau)*sigmaT*n_H(h,Omega_b)*fe(z_tau)
 
-	integrand = int1*int2
-	if verb:
-		print('Solving for tau at z =', zt)
-	#integration with Simpson rule
-	Isimps = simps(integrand, z_tau)
+	return int1*int2
+
+
+# Thompson optical depth for CMB  (eq. 4)
+def tau(zt,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n=1,verb=True):
+
+	print('\nSolving for tau . . ')
+	print('  %d N_dot points available'%(len(z_sample)))
+	print('  at redshifts --> ',z_sample,'\n')
+
+	# if zt just one value, I have problem with the len() function
+	if hasattr(zt, '__len__'):
+		pass
+	else:
+		zt = [zt]
+
+	args = z_sample,Nion_sample,h,Omega_M,Omega_b,z1,z0,Q0,n,verb
+
+	if len(zt)<2:
+
+		## sanity check
+		if zt[0]>20.:
+			print('\n redshift cannot be higher than 20!\n')
+			sys.exit()
+
+		nsteps = 500
+
+		#z_tau = np.linspace(z1,zt,nsteps)
+		z_tau = np.linspace(zt,z0-0.6,nsteps)
+
+		integrand = tau_integrand(z_tau,*args)
+		if verb:
+			print('Solving for tau at z =', zt)
+
+		#integration with Simpson rule
+		Isimps = simps(integrand, z_tau)
+		tau_final = Isimps
+
+	else:
+		verb = False
+		## sanity check
+		if zt[0]>min(zt):
+			print('\n redshift array must be ordered\n')
+			sys.exit()
+
+		z_tau = spaced_list(zt[1],z0,0.6,200)
+
+		integrand = tau_integrand(z_tau,*args)
+
+		tau_tmp   = np.zeros(len(z_tau))
+		tau_final = np.zeros(len(zt))
+
+		for i in range(len(z_tau)-1):
+
+			if verb:
+				print('Solving for tau at z =', z_tau[i])
+		
+			#integration with Simpson rule
+			Isimps = simps(integrand[i:-1], z_tau[i:-1])
+
+			tau_tmp[i] = Isimps
+
+			del Isimps
+
+		tau_final = np.interp(zt,z_tau,tau_tmp)
 	
-	return Isimps
+	return tau_final
 	
+
+
 
 #########################################################
 ###############   optical depth tau array   #############
@@ -395,20 +468,21 @@ def tau(zt,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n=1,ve
 ## z0, Q0 -------------------> initial conditions
 ## n ------------------------> spline to interpolate N_dot
 
-def tau_ar(z_ar,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n=1):
+## THIS FUNCTION IS NOW DEPRECATED
+# def tau_ar(z_ar,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n=1):
 
-	verb = False
-	args = z_sample,Nion_sample,h,Omega_M,Omega_b,z1,z0,Q0,n,verb
+# 	verb = False
+# 	args = z_sample,Nion_sample,h,Omega_M,Omega_b,z1,z0,Q0,n,verb
 	
-	print('\nSolving for tau . . ')
-	print('  %d N_dot points available'%(len(z_sample)))
-	print('  at redshifts --> ',z_sample,'\n')
+# 	print('\nSolving for tau . . ')
+# 	print('  %d N_dot points available'%(len(z_sample)))
+# 	print('  at redshifts --> ',z_sample,'\n')
 	
-	tau_ar = np.zeros(len(z_ar))
-	for i in range(len(z_ar)):
-		tau_ar[i] = tau(z_ar[i],*args)
+# 	tau_ar = np.zeros(len(z_ar))
+# 	for i in range(len(z_ar)):
+# 		tau_ar[i] = tau(z_ar[i],*args)
 
-	return tau_ar
+# 	return tau_ar
 
 
 
@@ -550,7 +624,7 @@ def N_ion_z_fz(z,csm,recipe,f_esc_prm,Muv_max_flag,Muv_max,cosmology,dir):
 			fescz[i] = fesc_isa(z[i],f_esc_prm)
 	else:
 		print('specify an existing patametrization of the escape fraction!')
-		print('available ones: sharma')
+		print('available ones: sharma, isa')
 		sys.exit()
 
 	for i in range(len(z)):
