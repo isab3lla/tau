@@ -67,6 +67,15 @@
 ## 2. deltaz_re_1, duration of reionization 
 ## 3. deltaz_re_2, duration of reionization (George+ 2015)
 
+
+## 6b) redshift of reionization and its duration
+## Following definitions of the Planck XLII 2016 paper
+## reion_time_Planck(zlist,Qlist)
+## zlist --------------------> z-array, same length as Q
+## Qlist --------------------> Q neutral fraction array
+## RETURN 2 scalars: z_re and Delta_z, i.e. duration of EoR
+
+
 ## 7) redshift dependent f_esc
 ## ## a) Sharma+2018
 ## ## fesc_Sharma(z,f_esc7)
@@ -509,6 +518,26 @@ def reion_time(zlist,Qlist,increment=1.e-6):
 	deltaz_re2 = z_ar_tmp[0] - z_ar_tmp[4]
 
 	return z_ar_tmp[1],deltaz_re1,deltaz_re2
+
+
+## 6b) z_re corresponds to z when Q = 0.5*f
+## Following definitions of the Planck XLII 2016 paper
+## reion_time_Planck(zlist,Qlist)
+## zlist --------------------> z-array, same length as Q
+## Qlist --------------------> Q neutral fraction array
+
+def reion_time_Planck(zlist,Qlist):
+
+	# taking into account electrons injected into the IGM 
+	# by first Helium reionization
+	f = fe(8)
+
+	Q_for_interp = np.array([0.1*f,0.5*f,0.99*f])
+	z_ar_tmp = np.interp(Q_for_interp,Qlist,zlist)
+
+	deltaz_re = z_ar_tmp[0] - z_ar_tmp[2]
+
+	return z_ar_tmp[1],deltaz_re
 
 
 
