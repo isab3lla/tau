@@ -90,11 +90,13 @@
 ## ## for the actual Faisst-like parametrization of f_esc:
 ## ## Faisst_param(z,fesc0,alpha)
 ##
-## ## c) isa parametrization
-## ## fesc_isa(z,f_esc6)
+## ## c) exercise parametrization
+## ## fesc_lin(z,f_esc6)
 ## ## z -----------------------> redshift
 ## ## f_esc6 ------------------> f_esc at z=6
-## ## RETURN 1 scalar: f_esc
+## ## fesc_quad(z,pl,pq)
+## ## RETURN 1 scalar: f_esc (or array, 
+## ##        according to input z)
 
 
 
@@ -575,12 +577,17 @@ def fesc_Faisst(z):
 	return f_esc, f_esc_up, f_esc_down
 
 
-## ## c) isa's parametrization
+## ## c) exercise parametrization
+## ## fesc_lin(z,f_esc6)
 ## ## z -----------------------> redshift
 ## ## f_esc6 ------------------> f_esc at z=6
+## ## fesc_quad(z,pl,pq)
 
-def fesc_isa(z,f_esc6):
+def fesc_lin(z,f_esc6):
 	return f_esc6*(1.+z)/7.
+
+def fesc_quad(z,params):
+	return params[0]*(1.+z)/1000 + params[1]*(1.+z)**2/100
 
 #########################################################
 #########   FUNCTIONS SPECIFIC FOR MY LF FORMAT   #######
@@ -648,12 +655,15 @@ def N_ion_z_fz(z,csm,recipe,f_esc_prm,Muv_max_flag,Muv_max,cosmology,dir):
 	if recipe=='sharma':
 		for i in range(len(z)):
 			fescz[i] = fesc_Sharma(z[i],f_esc_prm)
-	elif recipe=='isa':
+	elif recipe=='lin':
 		for i in range(len(z)):
-			fescz[i] = fesc_isa(z[i],f_esc_prm)
+			fescz[i] = fesc_lin(z[i],f_esc_prm)
+	elif recipe=='quad':
+		for i in range(len(z)):
+			fescz[i] = fesc_quad(z[i],f_esc_prm)
 	else:
 		print('specify an existing patametrization of the escape fraction!')
-		print('available ones: sharma, isa')
+		print('available ones: sharma, lin, quad')
 		sys.exit()
 
 	for i in range(len(z)):
@@ -661,7 +671,6 @@ def N_ion_z_fz(z,csm,recipe,f_esc_prm,Muv_max_flag,Muv_max,cosmology,dir):
 		N_ion_z[i]= N_ion(Muv,Phi,fescz[i],Muv_max_flag,Muv_max)
 		del Muv, Phi
 	return N_ion_z
-
 
 
 
