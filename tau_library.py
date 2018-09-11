@@ -188,16 +188,23 @@ def dt_dz(z,h,Omega_M): # yr
 	Hz_yr = Hz(z,h,Omega_M)*3.15576e7/(3.086e19) 
 	return -1./(1.+z)/Hz_yr
 
-## array with decrasing spacing between elements
-## useful for tau integrals
-def spaced_list(start,stop,how_close,spacing):
+## array with decraising (increasing) spacing between elements
+## useful for tau integrals 
+## from z to inf (from 0 to z) if denser True (False)
+def spaced_list(start,stop,how_close,spacing,denser):
 	a = np.array([start])
 
 	while a[-1] < (stop-how_close):
-		increment = float((stop - a[-1]))/spacing
+
+		if denser:
+			increment = float((stop - a[-1]))/spacing
+		else:
+			increment = float((a[-1] - start + how_close))/spacing
+
 		a = np.append(a,(increment+a[-1]))
 
 	return a
+
 
 
 #########################################################
@@ -399,7 +406,10 @@ def tau_integrand(z_tau,z_sample,Nion_sample,h,Omega_M,Omega_b,z1,z0,Q0,n,verb):
 
 
 # Thompson optical depth for CMB  (eq. 4)
-def tau(zt,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n=1,verb=True):
+def tau(zt,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n=1,verb=True,stand=True):
+
+	## for stand=True meaning the convential way for the integral (from 0 to z)
+	## otherwise stand=False integral solved from z to infinity
 
 	print('\nSolving for tau . . ')
 	print('  %d N_dot points available'%(len(z_sample)))
@@ -422,8 +432,10 @@ def tau(zt,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n=1,ve
 
 		nsteps = 500
 
-		#z_tau = np.linspace(z1,zt,nsteps)
-		z_tau = np.linspace(zt,z0-0.6,nsteps)
+		if stand:
+			z_tau = np.linspace(z1,zt,nsteps)
+		else:
+			z_tau = np.linspace(zt,z0-0.6,nsteps)
 
 		integrand = tau_integrand(z_tau,*args)
 		if verb:
@@ -440,7 +452,10 @@ def tau(zt,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n=1,ve
 			print('\n redshift array must be ordered\n')
 			sys.exit()
 
-		z_tau = spaced_list(zt[1],z0,0.6,200)
+		if stand:
+			z_tau = spaced_list(z1,zt[-1],0.6,200,denser=False)
+		else:
+			z_tau = spaced_list(zt[1],z0,0.6,200,denser=True)
 
 		integrand = tau_integrand(z_tau,*args)
 
@@ -453,7 +468,10 @@ def tau(zt,z_sample,Nion_sample,h,Omega_M,Omega_b,z1=0.0,z0=20.5,Q0=1e-13,n=1,ve
 				print('Solving for tau at z =', z_tau[i])
 		
 			#integration with Simpson rule
-			Isimps = simps(integrand[i:-1], z_tau[i:-1])
+			if stand:
+				Isimps = simps(integrand[0:i+1], z_tau[0:i+1])
+			else:
+				Isimps = simps(integrand[i:-1], z_tau[i:-1])
 
 			tau_tmp[i] = Isimps
 
