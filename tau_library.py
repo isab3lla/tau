@@ -285,7 +285,7 @@ def t_rec(z,C_HII=3.0,T0=2.e4): # (eq. 3)
 ###############   interpolating N_ion   ################
 
 ## creating the N_dot function in redshift
-## (this is just because e.g. z = 6-9 not enough to  
+## (this is just because e.g. z = 6-10 not enough to  
 ## get a reasonable ionised fraction Q
 ## so we extend it to z = 0-20 )
 
@@ -537,7 +537,7 @@ def reion_time(zlist,Qlist,increment=1.e-6):
 
 	deltaz_re2 = z_ar_tmp[0] - z_ar_tmp[4]
 
-	return z_ar_tmp[1],deltaz_re1,deltaz_re2
+	return z_ar_tmp[2],deltaz_re1,deltaz_re2
 
 
 ## 6b) z_re corresponds to z when Q = 0.5*f
